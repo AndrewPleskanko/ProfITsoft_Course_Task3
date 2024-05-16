@@ -1,9 +1,9 @@
 package com.example.block2.controllers;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3050")
 public class UserController {
 
     private final UserService userService;
@@ -114,10 +115,10 @@ public class UserController {
                     @ApiResponse(responseCode = "500", description = "Server error")
             })
     @PostMapping("/_list")
-    public ResponseEntity<GroupResponseDto<UserDto>> list(@RequestBody UserFilterDto filter, Pageable pageable) {
+    public ResponseEntity<GroupResponseDto<UserDto>> list(@RequestBody UserFilterDto filter) {
         log.info("Received request to list users with filter: {}", filter);
 
-        return ResponseEntity.ok(userService.listUsers(filter, pageable));
+        return ResponseEntity.ok(userService.listUsers(filter));
     }
 
     @Operation(summary = "Generate report",

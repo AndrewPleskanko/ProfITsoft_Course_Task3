@@ -11,9 +11,9 @@ import com.example.block2.entity.Role;
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
 
-    @Mapping(source = "name", target = "role")
+    @Mapping(source = "name", target = "name")
     RoleDto toDto(Role role);
 
-    @Mapping(source = "role", target = "name")
+    @Mapping(source = "name", target = "name")
     Role toEntity(RoleDto roleDto);
 }

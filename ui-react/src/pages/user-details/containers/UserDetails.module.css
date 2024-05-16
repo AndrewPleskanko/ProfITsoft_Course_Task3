@@ -1,0 +1,82 @@
+.container {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 80%;
+    margin: auto;
+}
+
+.editButton {
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.inputField {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    width: 100%;
+}
+
+.button {
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #343a40;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+input[type="text"] {
+    margin-bottom: 20px;
+    display: block;
+    width: 100%;
+}
+
+.buttonDisabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.buttonInvalid {
+    background-color: #dc3545;
+}
+
+.buttonBack {
+    margin-top: 40px;
+}
+
+.error {
+    color: #dc3545;
+    font-size: 14px;
+}

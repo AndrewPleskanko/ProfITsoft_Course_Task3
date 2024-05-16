@@ -40,8 +40,8 @@ public class RoleController {
     private final RoleMapper roleMapper;
 
     @PostMapping
-    @Operation(summary = "Create a new role",
-            description = "Creates a new role and returns the created role",
+    @Operation(summary = "Create a new name",
+            description = "Creates a new name and returns the created name",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Role successfully created",
                             content = @Content(schema = @Schema(implementation = RoleDto.class))),
@@ -49,7 +49,7 @@ public class RoleController {
                     @ApiResponse(responseCode = "500", description = "Server error")
             })
     public ResponseEntity<RoleDto> createRole(@Valid @RequestBody RoleDto role) {
-        log.info("Received request to create a role");
+        log.info("Received request to create a name");
         Role createdRole = roleService.createRole(role);
 
         return new ResponseEntity<>(roleMapper.toDto(createdRole), HttpStatus.CREATED);
@@ -72,8 +72,8 @@ public class RoleController {
                 .collect(Collectors.toList()));
     }
 
-    @Operation(summary = "Update a role",
-            description = "Updates a role and returns the updated role",
+    @Operation(summary = "Update a name",
+            description = "Updates a name and returns the updated name",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Role successfully updated",
                             content = @Content(schema = @Schema(implementation = RoleDto.class))),
@@ -83,14 +83,14 @@ public class RoleController {
             })
     @PutMapping("/{id}")
     public ResponseEntity<RoleDto> updateRole(@PathVariable Long id, @Valid @RequestBody RoleDto role) {
-        log.info("Received request to update role with id: {}", id);
+        log.info("Received request to update name with id: {}", id);
         Role updatedRole = roleService.updateRole(id, role);
 
         return ResponseEntity.ok(roleMapper.toDto(updatedRole));
     }
 
-    @Operation(summary = "Delete a role",
-            description = "Deletes a role",
+    @Operation(summary = "Delete a name",
+            description = "Deletes a name",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Role successfully deleted"),
                     @ApiResponse(responseCode = "404", description = "Role not found"),
@@ -98,7 +98,7 @@ public class RoleController {
             })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
-        log.info("Received request to delete role with id: {}", id);
+        log.info("Received request to delete name with id: {}", id);
         roleService.deleteRole(id);
 
         return ResponseEntity.noContent().build();

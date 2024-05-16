@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,9 +70,9 @@ public class UserServiceImpl implements UserService {
         String userPassword = user.getPassword();
         String encodedPassword = passwordEncoder.encode(userPassword);
         user.setPassword(encodedPassword);
-
-        Long roleId = userDto.getRole().getId();
-        Role role = roleService.getRole(roleId);
+        log.info("Starting createUser method with userDto: {}", userDto);
+        String roleName = userDto.getRole().getName();
+        Role role = roleService.getRoleByName(roleName);
         user.setRole(role);
 
         User savedUser = userRepository.save(user);
@@ -94,6 +95,7 @@ public class UserServiceImpl implements UserService {
         if (user.isEmpty()) {
             throw new EntityNotFoundException("User", id);
         }
+
         log.debug("User found: {}", user);
 
         return user.get();
@@ -110,8 +112,20 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User updateUser(Long id, UserDto userDto) {
         log.info("Update user with id: {}", id);
+        log.info("Update user with user: {}", userDto);
         User user = userMapper.toEntity(userDto);
         user.setId(id);
+        String roleName = userDto.getRole().getName();
+        Role role = roleService.getRoleByName(roleName);
+        user.setRole(role);
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+            user.setPassword(encodedPassword);
+        } else {
+            User existingUser = userRepository.findById(id).orElseThrow(() ->
+                    new EntityNotFoundException("User", id));
+            user.setPassword(existingUser.getPassword());
+        }
         User updatedUser = userRepository.save(user);
         log.debug("Updated user: {}", updatedUser);
 
@@ -140,17 +154,20 @@ public class UserServiceImpl implements UserService {
      * Lists users with a given filter and pagination.
      *
      * @param filter   the user filter data transfer object
-     * @param pageable the pagination information
      * @return a page of users
      */
     @Override
-    public GroupResponseDto<UserDto> listUsers(UserFilterDto filter, Pageable pageable) {
-        log.info("List users with filter: {} and pageable: {}", filter, pageable);
+    public GroupResponseDto<UserDto> listUsers(UserFilterDto filter) {
+        log.info("List users with filter: {}", filter);
         Specification<User> spec = createSpecification(filter);
-        Page<User> users = userRepository.findAll(spec, pageable);
-        List<UserDto> usersDto = users.map(userMapper::toDto).getContent();
+        int size = (filter.getSize() != null) ? filter.getSize() : 10;
+        Pageable pageable = PageRequest.of(filter.getPage(), size);
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
+        List<UserDto> usersDto = usersPage.getContent().stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
         log.debug("Found users: {}", usersDto);
-        return new GroupResponseDto<>(usersDto, users.getTotalPages());
+        return new GroupResponseDto<>(usersDto, usersPage.getTotalPages());
     }
 
     /**

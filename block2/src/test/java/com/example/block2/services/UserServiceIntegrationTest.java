@@ -51,27 +51,28 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
     @Autowired
     private UserMapper userMapper;
 
-    Role roleUser;
 
     @BeforeEach
     void setUp() {
         //Given
         RoleDto roleUserDto = RoleTestUtils.createRoleDto(1, "ROLE_USER");
         RoleDto roleAdminDto = RoleTestUtils.createRoleDto(2, "ROLE_ADMIN");
+        Role roleUser = roleMapper.toEntity(roleUserDto);
         Role roleAdmin = roleMapper.toEntity(roleAdminDto);
-        roleUser = roleMapper.toEntity(roleUserDto);
-        new User("test1", "test123", "presF@gmail.com", roleUser);
-        new User("test2", "test234", "test2@gmail.com", roleAdmin);
-        UserTestUtils.createUserDto("john", "123", roleUser, "testUser@gmail.com");
-        UserTestUtils.createUserDto("admin", "admin", roleAdmin, "testAdmin@gmail.com");
+        new User("test1", "test123", "presF@gmail.com", roleUser, "1234567890", 25);
+        new User("test2", "test234", "test2@gmail.com", roleAdmin, "1234567890", 25);
+        UserTestUtils.createUserDto("john", "123", roleMapper.toDto(roleUser), "testUser@gmail.com");
+        UserTestUtils.createUserDto("admin", "admin", roleAdminDto, "testAdmin@gmail.com");
     }
 
 
     @Test
     public void createUser_createsNewUser_returnsCreatedUser() {
         // Given
+        RoleDto roleDto = new RoleDto(1L, "ROLE_USER");
+        roleRepository.save(roleMapper.toEntity(roleDto));
         UserDto userDto = new UserDto(null, "testCreateUser",
-                "testCreatePassword", "testCreateUser@gmail.com", roleUser);
+                "testCreatePassword", "testCreateUser@gmail.com", roleDto, "1234567890", 25);
 
         // When
         User createdUserDto = userService.createUser(userDto);
@@ -81,13 +82,16 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
         assertEquals(userDto.getUsername(), createdUserDto.getUsername());
         assertEquals(userDto.getEmail(), createdUserDto.getEmail());
         assertEquals(userDto.getRole().getId(), createdUserDto.getRole().getId());
-        }
+    }
 
     @Test
     public void getAllUsers_createsAndGetsUsers_returnsUsers() {
         // Given
-        User user1 = userRepository.save(new User("testUser1", "testPassword1", "testUser1@gmail.com", roleUser));
-        userRepository.save(new User("testUser2", "testPassword2", "testUser2@gmail.com", roleUser));
+        RoleDto roleDto = new RoleDto(1L, "ROLE_USER_GetAllUsers");
+        Role save = roleRepository.save(roleMapper.toEntity(roleDto));
+        User user1 = userRepository.save(new User("testUser1", "testPassword1",
+                "testUser1@gmail.com", roleMapper.toEntity(roleDto), "1234567890", 25));
+        userRepository.save(new User("testUser2", "testPassword2", "testUser2@gmail.com", save, "1234567890", 25));
 
         // When
         List<UserDto> users = userService.getAllUsers();
@@ -101,7 +105,9 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
     @Test
     void getUserById_getsUserById_returnsUser() {
         // Given
-        User user = new User("testUser", "testPassword", "testUser@gmail.com", roleUser);
+        RoleDto roleDto = new RoleDto(1L, "ROLE_USER_GetAllUsers");
+        Role save = roleRepository.save(roleMapper.toEntity(roleDto));
+        User user = new User("testUser", "testPassword", "testUser@gmail.com", save, "1234567890", 25);
         User savedUser = userRepository.save(user);
         Long id = savedUser.getId();
 
@@ -118,26 +124,32 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
     @Test
     public void updateUser_updatesUser_returnsUpdatedUser() {
         // Given
+        RoleDto roleDto = new RoleDto(1L, "ROLE_USER_Update");
+        roleRepository.save(roleMapper.toEntity(roleDto));
         UserDto userDto = new UserDto(null, "testUpdateUser",
-                "testUpdatePassword", "testUpdateUser@gmail.com", roleUser);
-        User createdUserDto = userService.createUser(userDto);
-        createdUserDto.setUsername("updatedUsername");
-        createdUserDto.setPassword("updatedPassword");
+                "testUpdatePassword", "testUpdateUser@gmail.com", roleDto, "1234567890", 25);
+        User createdUser = userService.createUser(userDto);
+
+        UserDto updatedUserDto = new UserDto(createdUser.getId(), "updatedUsername",
+                "updatedPassword", createdUser.getEmail(), roleDto, createdUser.getPhone(), createdUser.getAge());
 
         // When
-        User updatedUserDto = userService.updateUser(createdUserDto.getId(), userMapper.toDto(createdUserDto));
+        User updatedUser = userService.updateUser(createdUser.getId(), updatedUserDto);
 
         // Then
-        assertEquals(createdUserDto.getId(), updatedUserDto.getId());
-        assertEquals("updatedUsername", updatedUserDto.getUsername());
+        assertEquals(createdUser.getId(), updatedUser.getId());
+        assertEquals(updatedUserDto.getUsername(), updatedUser.getUsername());
     }
 
     @Test
     public void deleteUser_deletesUser_userDoesNotExist() {
         // Given
-        Role role = roleRepository.save(new Role("ROLE_USER"));
-        User user = new User("testUser", "testPassword", "testUser@gmail.com", role);
-        User createdUserDto = userService.createUser(userMapper.toDto(user));
+        RoleDto roleDto = new RoleDto(2L, "ROLE_Delete");
+        Role save = roleRepository.save(roleMapper.toEntity(roleDto));
+        User user = new User("testUser", "testPassword", "testUser@gmail.com", save, "1234567890", 25);
+        UserDto userDto = new UserDto(null, user.getUsername(), user.getPassword(),
+                user.getEmail(), roleDto, user.getPhone(), user.getAge());
+        User createdUserDto = userService.createUser(userDto);
 
         // When
         userService.deleteUser(createdUserDto.getId());
@@ -151,15 +163,16 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
         // Given
         Role role = roleRepository.save(new Role("USER"));
         userRepository.save(new User("testUser1345444444442",
-                "testPassword1", "testUser1@gmail.com", role));
+                "testPassword1", "testUser1@gmail.com", role, "1234567890", 25));
         userRepository.save(new User("testUser22467358467534",
-                "testPassword2", "testUser2@gmail.com", role));
+                "testPassword2", "testUser2@gmail.com", role, "1234567890", 25));
         UserFilterDto filter = new UserFilterDto();
         filter.setUsername("testUser");
+        filter.setPage(0);
         Pageable pageable = PageRequest.of(0, 5);
 
         // When
-        GroupResponseDto<UserDto> users = userService.listUsers(filter, pageable);
+        GroupResponseDto<UserDto> users = userService.listUsers(filter);
 
         // Then
         assertEquals(3, users.getContent().size());

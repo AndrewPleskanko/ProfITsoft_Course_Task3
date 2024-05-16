@@ -28,7 +28,7 @@ class RoleServiceIntegrationTest {
     @BeforeEach
     public void setUp() {
         roleDto = new RoleDto();
-        roleDto.setRole("User");
+        roleDto.setName("User");
     }
 
     @Test
@@ -37,7 +37,7 @@ class RoleServiceIntegrationTest {
         Role createdRole = roleService.createRole(roleDto);
 
         // Then
-        assertEquals(roleDto.getRole(), createdRole.getName());
+        assertEquals(roleDto.getName(), createdRole.getName());
     }
 
     @Test
@@ -54,13 +54,13 @@ class RoleServiceIntegrationTest {
     public void updateRole_updatesRole_returnsUpdatedRole() {
         // Given
         Role createdRole = roleService.createRole(roleDto);
-        roleDto.setRole("ROLE_UPDATED");
+        roleDto.setName("ROLE_UPDATED");
 
         // When
         Role updatedRole = roleService.updateRole(createdRole.getId(), roleDto);
 
         // Then
-        assertEquals(roleDto.getRole(), updatedRole.getName());
+        assertEquals(roleDto.getName(), updatedRole.getName());
     }
 
     @Test
@@ -98,7 +98,7 @@ class RoleServiceIntegrationTest {
     public void updateRole_withInvalidId_throwsRuntimeException() {
         // Given
         RoleDto roleDto = new RoleDto();
-        roleDto.setRole("Test Role");
+        roleDto.setName("Test Role");
 
         // When & Then
         assertThrows(RuntimeException.class, () -> roleService.updateRole(-1L, roleDto));
@@ -108,7 +108,7 @@ class RoleServiceIntegrationTest {
     public void deleteRole_withInvalidId_throwsRoleDeleteException() {
         // Given
         RoleDto roleDto = new RoleDto();
-        roleDto.setRole("ROLE_TEST");
+        roleDto.setName("ROLE_TEST");
         Role createdRole = roleService.createRole(roleDto);
 
         // When

@@ -6,9 +6,12 @@ function Default() {
   const { formatMessage } = useIntl();
 
   return (
-    <Typography>
-      {formatMessage({ id: 'title' })}
-    </Typography>
+      <div>
+        <Typography>
+          {formatMessage({id: 'title'})}
+        </Typography>
+        <a href="http://localhost:3050/user-list?lang=ua">User List</a>
+      </div>
   );
 }
 

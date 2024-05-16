@@ -2,7 +2,7 @@ databaseChangeLog:
   - include:
       file: classpath:/db/changelog/changes/001-create-role-table.sql
       author: Andriy Pleskanko
-      comment: Create role table
+      comment: Create name table
   - include:
       file: classpath:/db/changelog/changes/002-create-user-table.sql
       author: Andriy Pleskanko
