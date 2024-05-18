@@ -1,197 +1,216 @@
-import React, {useState, useEffect} from 'react';
-import axios from 'axios';
+import {useDispatch, useSelector} from 'react-redux';
 import {useNavigate, useParams} from 'react-router-dom';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faEdit} from '@fortawesome/free-solid-svg-icons';
-import styles from './UserDetails.module.css';
-import {validate} from './userValidation';
+import {validate} from '../validation/userValidation';
 import {
-    API_BASE_URL,
-    SUCCESS_MESSAGE_CREATE,
-    SUCCESS_MESSAGE_UPDATE,
-    ERROR_MESSAGE,
-    ROLES
+    AGE_LABEL, BACK_BUTTON_TEXT, CANCEL_BUTTON_TEXT,
+    CREATE_BUTTON_TEXT, EMAIL_LABEL, LOADING_USER_DATA_TEXT,
+    NO_AGE_SET_TEXT, NO_PASSWORD_SET_TEXT,
+    NO_PHONE_NUMBER_SET_TEXT, PASSWORD_LABEL, PHONE_LABEL, ROLE_LABEL,
+    ROLES,
+    SAVE_BUTTON_TEXT, SELECT_A_ROLE_TEXT, USER_DETAILS_HEADING, USERNAME_LABEL
 } from '../constants/userConstants';
 
+import React, {useState, useEffect, useCallback} from 'react';
+import {toast, ToastContainer} from "react-toastify"; // Added ToastContainer here
+import 'react-toastify/dist/ReactToastify.css';
+import {CLEAR_SUCCESS, SET_SUCCESS} from "../../../app/constants/userActionTypes";
+import {
+    fetchUser,
+    createUser,
+    updateUser,
+    setFormData,
+    setErrors,
+    setEditMode as setEditModeAction,
+} from "../../../app/actions/userActions";
+
 const UserDetails = () => {
-        const [user, setUser] = useState(null);
-        const [editMode, setEditMode] = useState(false);
-        const [error, setError] = useState(null);
-        const [errors, setErrors] = useState({});
-        const navigate = useNavigate();
-        const {id} = useParams();
-        const [formData, setFormData] = useState({username: '', email: '', role: ''});
-        const [success, setSuccess] = useState(null);
+    const navigate = useNavigate();
+    const {id} = useParams();
+    const dispatch = useDispatch();
+    const user = useSelector(state => state.userRequest.userRequest);
+    const editModeRedux = useSelector(state => state.userRequest.editMode);
+    const [editMode, setEditMode] = useState(editModeRedux);
+    const error = useSelector(state => state.userRequest.error);
+    const errors = useSelector(state => state.userRequest.errors);
+    const success = useSelector(state => state.userRequest.success);
+    const loading = useSelector(state => state.userRequest.loading);
 
-        useEffect(() => {
-            if (id !== 'new') {
-                axios.get(`${API_BASE_URL}/${id}`)
-                    .then(response => {
-                        setUser(response);
-                        setFormData({
-                            username: response.username,
-                            email: response.email,
-                            role: response.role.name,
-                            age: response.age,
-                            phone: response.phone
-                        });
-                    })
-            } else {
-                setEditMode(true);
-            }
-        }, [id]);
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        role: '',
+        password: '',
+        age: '',
+        phone: '',
+    });
 
-        const handleInputChange = (event) => {
-            const {name, value} = event.target;
-            if (name === 'role') {
-                setFormData({...formData, [name]: value});
-            } else {
-                setFormData({...formData, [name]: value});
-            }
+    useEffect(() => {
+        setEditMode(editModeRedux);
+    }, [editModeRedux]);
 
-            const newError = validate(name, value);
-            if (newError[name]) {
-                setErrors({...errors, [name]: newError[name]});
-            } else {
-                const {[name]: value, ...remainingErrors} = errors;
-                setErrors(remainingErrors);
-            }
-        };
-
-        const handleEdit = () => {
+    useEffect(() => {
+        if (id !== 'new') {
+            dispatch(fetchUser(id));
+        } else {
             setEditMode(true);
-        };
+        }
+    }, [id, dispatch]);
 
-        const handleSave = () => {
-            if (!formData.role || !formData.username || !formData.email || !formData.password) {
-                setErrors({
-                    ...errors,
-                    role: !formData.role ? 'Role is required' : '',
-                    username: !formData.username ? 'Username is required' : '',
-                    email: !formData.email ? 'Email is required' : '',
-                    password: !formData.password ? 'Password is required' : ''
-                });
-                return;
-            }
+    const handleInputChange = useCallback((event) => {
+        const {name, value} = event.target;
+        setFormData(prevState => ({...prevState, [name]: value}));
 
-            if (id === 'new') {
-                axios.post(API_BASE_URL, formData)
-                    .then(() => {
-                        setSuccess(SUCCESS_MESSAGE_CREATE);
-                        setTimeout(() => setSuccess(null), 5000);
-                        navigate('/user-list');
-                    })
-                    .catch(error => {
-                        // eslint-disable-next-line no-unused-vars
-                        setError(ERROR_MESSAGE);
-                    });
-            } else {
-                axios.put(`${API_BASE_URL}/${id}`, formData)
-                    .then(response => {
-                        setUser(response);
-                        setSuccess(SUCCESS_MESSAGE_UPDATE);
-                        setTimeout(() => setSuccess(null), 5000);
+        const newError = validate(name, value);
+        if (newError[name]) {
+            dispatch(setErrors({...errors, [name]: newError[name]}));
+        } else {
+            const {[name]: value, ...remainingErrors} = errors;
+            dispatch(setErrors(remainingErrors));
+        }
+    }, [dispatch, errors]);
 
-                        setEditMode(false);
-                    }).catch((error) => {
-                    setError(ERROR_MESSAGE);
-                });
-            }
-        };
+    const handleEdit = () => {
+        setFormData({
+            username: user.username || '',
+            email: user.email || '',
+            role: user.role || '',
+            password: user.password || '',
+            age: user.age || '',
+            phone: user.phone || '',
+        });
+        dispatch(setEditModeAction(true));
+    };
 
-        const handleCancel = () => {
-            if (id === 'new') {
-                navigate('/user-list');
-            } else {
-                setEditMode(false);
-                setFormData({
-                    username: user.username,
-                    email: user.email,
-                    password: user.password,
-                    role: user.role,
-                    age: user.age,
-                    phone: user.phone
-                });
-            }
-        };
+    const handleSave = (event) => {
+        event.preventDefault();
 
-        const handleBack = () => {
-            navigate('/user-list');
-        };
+        const newErrors = validate(formData);
+        if (Object.values(newErrors).some(error => error !== '')) {
+            dispatch(setErrors(newErrors));
+            Object.values(newErrors).forEach((error: string) => {
+                toast.error(error);
+            });
+        } else {
+            const action = id === 'new' ? createUser(formData) : updateUser(id, formData);
+            dispatch(action).then(() => {
+                toast.success(`User ${id === 'new' ? 'created' : 'updated'} successfully`);
+                dispatch({type: SET_SUCCESS, payload: `User ${id === 'new' ? 'created' : 'updated'} successfully`});
+                setTimeout(() => dispatch({type: CLEAR_SUCCESS}), 5000);
+                if (id !== 'new') {
+                    dispatch(fetchUser(id));
+                }
+                setTimeout(() => dispatch({type: CLEAR_SUCCESS}), 5000);
+                if (id === 'new') {
+                    setTimeout(() => navigate('/user-list'), 5000);
+                }
+            }).catch((error) => {
+                toast.error(`Failed to ${id === 'new' ? 'create' : 'update'} user: ${error.message}`);
+            });
+        }
+    };
 
-        return (
-            <div className={styles.container}>
-                <h1>User Details</h1>
-                {error && <p>{error}</p>}
-                {success && <p>{success}</p>}
-                {editMode ? (
-                    <div>
-                        <label>
-                            Username:
-                            <input type="text" name="username" value={formData.username} onChange={handleInputChange}
-                                   required className={styles.inputField}/>
-                            {errors.username && <p className={styles.error}>{errors.username}</p>}
-                        </label>
-                        <label>
-                            Email:
-                            <input type="email" name="email" value={formData.email} onChange={handleInputChange}
-                                   required className={styles.inputField}/>
-                            {errors.email && <p className={styles.error}>{errors.email}</p>}
-                        </label>
-                        <label>
-                            Role:
-                            <select name="role" value={formData.role} onChange={handleInputChange} required
-                                    className={styles.inputField}>
-                                <option value="" disabled={formData.role !== ''}>Select a role</option>
-                                {ROLES.map((role) => (
-                                    <option key={role} value={role}>{role}</option>
-                                ))}
-                            </select>
-                            {errors.role && <p className={styles.error}>{errors.role}</p>}
-                        </label>
-                        <label>
-                            Password:
-                            <input type="password" name="password" value={formData.password}
-                                   onChange={handleInputChange}
-                                   required className={styles.inputField}/>
-                        </label>
-                        {errors.password && <p className={styles.error}>{errors.password}</p>}
-                        <label>
-                            Age:
-                            <input type="text" name="age" value={formData.age} onChange={handleInputChange}
-                                   required className={styles.inputField}/>
-                        </label>
-                        {errors.age && <p className={styles.error}>{errors.age}</p>}
-                        <label>
-                            Phone:
-                            <input type="text" name="phone" value={formData.phone} onChange={handleInputChange}
-                                   required className={styles.inputField}/>
-                        </label>
-                        {errors.phone && <p className={styles.error}>{errors.phone}</p>}
-                        <button
-                            className={`${styles.button} ${Object.values(errors).some(error => error !== '') ? styles.buttonInvalid : ''}`}
-                            onClick={handleSave}
-                            disabled={Object.values(errors).some(error => error !== '')}
-                        > Save
-                        </button>
-                        <button className={styles.button} onClick={handleCancel}>Cancel</button>
+    const handleCancel = () => {
+        setFormData(user);
+        dispatch(setEditModeAction(false));
+    };
+
+    const handleBack = () => {
+        navigate('/user-list');
+    };
+
+    return (
+        <div className="container py-5">
+            <ToastContainer/>
+            <h1 className="my-4 text-center">{USER_DETAILS_HEADING}</h1>
+            {error && <div className="alert alert-danger">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+            {loading ? (
+                <p>{LOADING_USER_DATA_TEXT}</p>
+            ) : (
+                editMode ? (
+                    <div className="card shadow">
+                        <div className="card-body">
+                            <form>
+                                <div className="form-group">
+                                    <label>{USERNAME_LABEL}</label>
+                                    <input type="text" name="username" value={formData.username}
+                                           onChange={handleInputChange}
+                                           className="form-control"
+                                           required/>
+                                    {errors.username && <p className="text-danger">{errors.username}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label>{EMAIL_LABEL}</label>
+                                    <input type="email" name="email" value={formData.email} onChange={handleInputChange}
+                                           className="form-control"
+                                           required/>
+                                    {errors.email && <p className="text-danger">{errors.email}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label>{ROLE_LABEL}</label>
+                                    <select name="role" value={formData.role} onChange={handleInputChange}
+                                            className="form-control" required>
+                                        <option value="" disabled={formData.role !== ''}>{SELECT_A_ROLE_TEXT}</option>
+                                        {ROLES.map((role) => (
+                                            <option key={role} value={role}>{role}</option>
+                                        ))}
+                                    </select>
+                                    {errors.role && <p className="text-danger">{errors.role}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label>{PASSWORD_LABEL}</label>
+                                    <input type="password" name="password" value={formData.password}
+                                           onChange={handleInputChange}
+                                           className="form-control"
+                                           required/>
+                                    {errors.password && <p className="text-danger">{errors.password}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label>{AGE_LABEL}</label>
+                                    <input type="text" name="age" value={formData.age} onChange={handleInputChange}
+                                           className="form-control"
+                                           required/>
+                                    {errors.age && <p className="text-danger">{errors.age}</p>}
+                                </div>
+                                <div className="form-group">
+                                    <label>{PHONE_LABEL}</label>
+                                    <input type="text" name="phone" value={formData.phone} onChange={handleInputChange}
+                                           className="form-control"
+                                           required/>
+                                    {errors.phone && <p className="text-danger">{errors.phone}</p>}
+                                </div>
+                                <button
+                                    className={`btn btn-primary ${Object.values(errors).some(error => error !== '') ? 'disabled' : ''}`}
+                                    onClick={handleSave}
+                                    disabled={Object.values(errors).some(error => error !== '')}>
+                                    {id === 'new' ? CREATE_BUTTON_TEXT : SAVE_BUTTON_TEXT}
+                                </button>
+                                <button onClick={handleCancel}
+                                        className="btn btn-secondary ml-2">{CANCEL_BUTTON_TEXT}</button>
+                            </form>
+                        </div>
                     </div>
-                ) : (
-                    user && <div>
-                        <p>Username: {user.username}</p>
-                        <p>Email: {user.email}</p>
-                        <p>Password: {user.password}</p>
-                        <p>Role: {user.role.name}</p>
-                        <p>Age: {user.age}</p>
-                        <p>Phone: {user.phone}</p>
-                        <button className={styles.editButton} onClick={handleEdit}><FontAwesomeIcon icon={faEdit}/>
-                        </button>
-                    </div>
-                )}
-                <button className={`${styles.button} ${styles.buttonBack}`} onClick={handleBack}>Back</button>
-            </div>
-        );
-    }
-;
+                ) : (user && (
+                        <div className="card shadow">
+                            <div className="card-body">
+                                <p>Username: {user.username}</p>
+                                <p>Email: {user.email}</p>
+                                <p>Password: {user.password ? user.password : NO_PASSWORD_SET_TEXT}</p>
+                                <p>Role: {user.role.name}</p>
+                                <p>Age: {user.age ? user.age : NO_AGE_SET_TEXT}</p>
+                                <p>Phone: {user.phone ? user.phone : NO_PHONE_NUMBER_SET_TEXT}</p>
+                                <button onClick={handleEdit} className="btn btn-primary"><FontAwesomeIcon
+                                    icon={faEdit}/></button>
+                                <button onClick={handleBack}
+                                        className="btn btn-secondary ml-2">{BACK_BUTTON_TEXT}</button>
+                            </div>
+                        </div>
+                    )
+                ))}
+        </div>
+    );
+}
 
 export default UserDetails;
