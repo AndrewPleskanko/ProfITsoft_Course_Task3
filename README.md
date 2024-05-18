@@ -32,12 +32,18 @@ retrieving users.
    mvn clean install
 ```
 
-3) Run project
+3.1) Run project on Java
 
 ```shell
-   mvn spring-boot:run
+    cd block2
+    mvn spring-boot:run
 ```
+3.2) Run project on React
 
+```shell
+   cd ui-react
+   npm start
+```
 4) Use VM options to set the database connection details
 
  ```copy
