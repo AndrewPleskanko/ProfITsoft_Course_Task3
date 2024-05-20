@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.example.block2.dto.RoleDto;
 import com.example.block2.entity.Role;
@@ -33,6 +36,22 @@ class RoleControllerIntegrationTest extends BaseServiceTest {
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    public void setUp() {
+        clearDatabase();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        clearDatabase();
+    }
+
+    private void clearDatabase() {
+        jdbcTemplate.execute("DELETE FROM role");
+    }
 
     @Test
     public void createRole_createsNewRole_returnsCreatedRole() {
