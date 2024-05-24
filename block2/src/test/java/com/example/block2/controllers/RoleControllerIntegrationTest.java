@@ -50,6 +50,7 @@ class RoleControllerIntegrationTest extends BaseServiceTest {
     }
 
     private void clearDatabase() {
+        jdbcTemplate.execute("DELETE FROM app_user");
         jdbcTemplate.execute("DELETE FROM role");
     }
 

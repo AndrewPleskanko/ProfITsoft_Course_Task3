@@ -125,4 +125,12 @@ public class RoleServiceImpl implements RoleService {
         log.debug("Role found: {}", role);
         return role;
     }
+
+    @Override
+    @Transactional
+    public void deleteAllRoles() {
+        log.info("Deleting all roles");
+        roleRepository.deleteAll();
+        log.debug("All roles deleted successfully");
+    }
 }

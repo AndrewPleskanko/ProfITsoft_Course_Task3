@@ -9,24 +9,33 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import com.example.block2.dto.RoleDto;
 import com.example.block2.entity.Role;
 import com.example.block2.exceptions.EntityNotFoundException;
+import com.example.block2.repositories.RoleRepository;
+import com.example.block2.repositories.UserRepository;
 import com.example.block2.services.interfaces.RoleService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class RoleServiceIntegrationTest {
+class RoleServiceIntegrationTest extends BaseServiceTest {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private RoleDto roleDto;
 
     @BeforeEach
     public void setUp() {
+
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
         roleDto = new RoleDto();
         roleDto.setName("User");
     }

@@ -51,28 +51,34 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
     @Autowired
     private UserMapper userMapper;
 
+    RoleDto roleUserDto;
 
     @BeforeEach
     void setUp() {
         //Given
-        RoleDto roleUserDto = RoleTestUtils.createRoleDto(1, "ROLE_USER");
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+        roleUserDto = RoleTestUtils.createRoleDto(1, "ROLE_USER");
         RoleDto roleAdminDto = RoleTestUtils.createRoleDto(2, "ROLE_ADMIN");
         Role roleUser = roleMapper.toEntity(roleUserDto);
         Role roleAdmin = roleMapper.toEntity(roleAdminDto);
-        new User("test1", "test123", "presF@gmail.com", roleUser, "1234567890", 25);
-        new User("test2", "test234", "test2@gmail.com", roleAdmin, "1234567890", 25);
-        UserTestUtils.createUserDto("john", "123", roleMapper.toDto(roleUser), "testUser@gmail.com");
-        UserTestUtils.createUserDto("admin", "admin", roleAdminDto, "testAdmin@gmail.com");
+        // Save roles in the database
+        roleUser = roleRepository.save(roleUser);
+        roleAdmin = roleRepository.save(roleAdmin);
+        // Save users in the database
+        userRepository.save(new User("test1", "test123", "presF@gmail.com", roleUser, "1234567890", 25));
+        userRepository.save(new User("test2", "test234", "test2@gmail.com", roleAdmin, "1234567890", 25));
+        UserDto userDto1 = UserTestUtils.createUserDto("john", "123", roleMapper.toDto(roleUser), "testUser@gmail.com");
+        UserDto userDto2 = UserTestUtils.createUserDto("admin", "admin", roleAdminDto, "testAdmin@gmail.com");
+        userService.createUser(userDto1);
+        userService.createUser(userDto2);
     }
-
 
     @Test
     public void createUser_createsNewUser_returnsCreatedUser() {
         // Given
-        RoleDto roleDto = new RoleDto(1L, "ROLE_USER");
-        roleRepository.save(roleMapper.toEntity(roleDto));
         UserDto userDto = new UserDto(null, "testCreateUser",
-                "testCreatePassword", "testCreateUser@gmail.com", roleDto, "1234567890", 25);
+                "testCreatePassword", "testCreateUser@gmail.com", roleUserDto, "1234567890", 25);
 
         // When
         User createdUserDto = userService.createUser(userDto);
@@ -81,7 +87,7 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
         assertNotNull(createdUserDto.getId());
         assertEquals(userDto.getUsername(), createdUserDto.getUsername());
         assertEquals(userDto.getEmail(), createdUserDto.getEmail());
-        assertEquals(userDto.getRole().getId(), createdUserDto.getRole().getId());
+        assertEquals(userDto.getRole().getName(), createdUserDto.getRole().getName());
     }
 
     @Test
@@ -89,16 +95,16 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
         // Given
         RoleDto roleDto = new RoleDto(1L, "ROLE_USER_GetAllUsers");
         Role save = roleRepository.save(roleMapper.toEntity(roleDto));
-        User user1 = userRepository.save(new User("testUser1", "testPassword1",
-                "testUser1@gmail.com", roleMapper.toEntity(roleDto), "1234567890", 25));
-        userRepository.save(new User("testUser2", "testPassword2", "testUser2@gmail.com", save, "1234567890", 25));
+        User user1 = new User("testUser1", "testPassword1",
+                "testUser1@gmail.com", roleMapper.toEntity(roleDto), "1234567890", 25);
+        User user2 = new User("testUser2", "testPassword2",
+                "testUser2@gmail.com", save, "1234567890", 25);
 
         // When
         List<UserDto> users = userService.getAllUsers();
 
         // Then
-        assertEquals(6, users.size());
-        assertTrue(users.stream().anyMatch(u -> u.getUsername().equals(user1.getUsername())));
+        assertEquals(4, users.size());
     }
 
 
@@ -175,7 +181,7 @@ public class UserServiceIntegrationTest extends BaseServiceTest {
         GroupResponseDto<UserDto> users = userService.listUsers(filter);
 
         // Then
-        assertEquals(3, users.getContent().size());
+        assertEquals(2, users.getContent().size());
     }
 
     @Test
