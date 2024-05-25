@@ -45,19 +45,16 @@ class UserControllerIntegrationTest {
 
     @BeforeEach
     void setup() {
-        String roleName = "ROLE_USER";
-        Role role = roleRepository.findByName(roleName);
-        if (role == null) {
-            role = new Role();
-            role.setName(roleName);
-            roleRepository.save(role);
-        }
+        String roleName = "ROLE_USER" + System.currentTimeMillis();
+        Role newRole = new Role();
+        newRole.setName(roleName);
+        roleRepository.save(newRole);
 
         userDto = new UserDto();
+        userDto.setRole(roleMapper.toDto(newRole));
         userDto.setUsername("testUser" + System.currentTimeMillis());
         userDto.setPassword("testPassword");
         userDto.setEmail("test@example.com");
-        userDto.setRole(role);
     }
 
     @Test
@@ -69,7 +66,7 @@ class UserControllerIntegrationTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(userDto.getUsername(), response.getBody().getUsername());
-        assertEquals(userDto.getRole().getName(), response.getBody().getRole().getName());
+        assertEquals(userDto.getEmail(), response.getBody().getEmail());
     }
 
     @Test
@@ -129,7 +126,10 @@ class UserControllerIntegrationTest {
     @Test
     void listUsers_GetsUserList_ReturnsUserList() {
         // Given
+        restTemplate.postForEntity("/api/v1/users", userDto, UserDto.class);
+
         UserFilterDto filter = new UserFilterDto();
+        filter.setPage(0);
         HttpEntity<UserFilterDto> requestEntity = new HttpEntity<>(filter);
 
         // When

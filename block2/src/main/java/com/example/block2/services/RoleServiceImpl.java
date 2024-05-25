@@ -26,15 +26,15 @@ public class RoleServiceImpl implements RoleService {
     private final RoleMapper roleMapper;
 
     /**
-     * Creates a new role.
+     * Creates a new name.
      *
-     * @param roleDto the role to create
-     * @return the created role
+     * @param roleDto the name to create
+     * @return the created name
      */
     @Override
     @Transactional
     public Role createRole(RoleDto roleDto) {
-        log.info("Attempting to create role: {}", roleDto);
+        log.info("Attempting to create name: {}", roleDto);
         Role role = roleMapper.toEntity(roleDto);
         Role savedRole = roleRepository.save(role);
 
@@ -56,49 +56,49 @@ public class RoleServiceImpl implements RoleService {
     }
 
     /**
-     * Retrieves a role by its id.
+     * Retrieves a name by its id.
      *
-     * @param id the id of the role to retrieve
-     * @return the retrieved role
-     * @throws EntityNotFoundException if no role is found with the given id
+     * @param id the id of the name to retrieve
+     * @return the retrieved name
+     * @throws EntityNotFoundException if no name is found with the given id
      */
     @Override
     public Role getRole(Long id) {
-        log.info("Get role with id: {}", id);
+        log.info("Get name with id: {}", id);
 
         return findRoleById(id);
     }
 
     /**
-     * Updates a role.
+     * Updates a name.
      *
-     * @param id      the id of the role to update
-     * @param roleDto the new role data
-     * @return the updated role
-     * @throws RuntimeException if an error occurs while updating the role
+     * @param id      the id of the name to update
+     * @param roleDto the new name data
+     * @return the updated name
+     * @throws RuntimeException if an error occurs while updating the name
      */
     @Override
     @Transactional
     public Role updateRole(Long id, RoleDto roleDto) {
-        log.info("Update role with id: {}", id);
+        log.info("Update name with id: {}", id);
         Role role = findRoleById(id);
-        role.setName(roleDto.getRole());
+        role.setName(roleDto.getName());
 
         Role updatedRole = roleRepository.save(role);
-        log.debug("Updated role: {}", updatedRole);
+        log.debug("Updated name: {}", updatedRole);
 
         return updatedRole;
     }
 
     /**
-     * Deletes a role by its id.
+     * Deletes a name by its id.
      *
-     * @param id the id of the role to delete
-     * @throws RuntimeException if an error occurs while deleting the role
+     * @param id the id of the name to delete
+     * @throws RuntimeException if an error occurs while deleting the name
      */
     @Override
     public void deleteRole(Long id) {
-        log.info("Delete role with id: {}", id);
+        log.info("Delete name with id: {}", id);
         Role role = findRoleById(id);
 
         roleRepository.delete(role);
@@ -106,7 +106,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private Role findRoleById(Long id) {
-        log.debug("Find role with id: {}", id);
+        log.info("Find name with id: {}", id);
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Role not found with id: {}", id);
@@ -115,5 +115,22 @@ public class RoleServiceImpl implements RoleService {
         log.debug("Role found: {}", role);
 
         return role;
+    }
+
+    @Override
+    public Role getRoleByName(String name) {
+        log.info("Find name with name: {}", name);
+        Role role =  roleRepository.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Role",404L));
+        log.debug("Role found: {}", role);
+        return role;
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllRoles() {
+        log.info("Deleting all roles");
+        roleRepository.deleteAll();
+        log.debug("All roles deleted successfully");
     }
 }

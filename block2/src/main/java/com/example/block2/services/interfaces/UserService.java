@@ -2,7 +2,6 @@ package com.example.block2.services.interfaces;
 
 import java.util.List;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.block2.dto.GroupResponseDto;
@@ -23,7 +22,7 @@ public interface UserService {
 
     void deleteUser(Long id);
 
-    GroupResponseDto<UserDto> listUsers(UserFilterDto filter, Pageable pageable);
+    GroupResponseDto<UserDto> listUsers(UserFilterDto filter);
 
     UserUploadResultDto uploadUsersFromFile(MultipartFile multipartFile) throws Exception;
 

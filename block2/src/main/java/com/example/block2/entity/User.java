@@ -10,12 +10,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,9 +51,17 @@ public class User extends AbstractEntity implements UserDetails {
     private String email;
 
     @NotNull(message = "Role cannot be null")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+    @Pattern(regexp = "^$|^[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits long")
+    @Column(name = "phone")
+    private String phone;
+
+    @Max(value = 110, message = "Age should not be greater than 100")
+    @Column(name = "age")
+    private Integer age;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

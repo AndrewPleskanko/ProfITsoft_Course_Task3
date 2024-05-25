@@ -13,5 +13,9 @@ public class RoleDto {
     private Long id;
 
     @NotBlank(message = "Role name cannot be blank")
-    private String role;
+    private String name;
+
+    public RoleDto(String name) {
+        this.name = name;
+    }
 }

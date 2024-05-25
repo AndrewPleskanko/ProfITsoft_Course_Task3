@@ -25,6 +25,10 @@ import Header from '../components/Header';
 import IntlProvider from '../components/IntlProvider';
 import MissedPage from '../components/MissedPage';
 import SearchParamsConfigurator from '../components/SearchParamsConfigurator';
+import EntityDetail from "../../pages/user-details/containers/UserDetail";
+import EntityList from "../../pages/user-list/containers/UserList";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const dispatch = useDispatch();
@@ -78,6 +82,14 @@ function App() {
                     <Route
                       element={<SecretPage />}
                       path={`${pageURLs[pages.secretPage]}`}
+                    />
+                    <Route
+                        element={<EntityList />}
+                        path="/user-list"
+                    />
+                    <Route
+                        element={<EntityDetail />}
+                        path="/user-detail/:id"
                     />
                     <Route
                       element={(

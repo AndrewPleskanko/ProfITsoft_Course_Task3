@@ -182,18 +182,19 @@ const fetchUser = () => (dispatch) => {
     return null;
   }
   dispatch(requestUser());
-  return getUser()
-    // TODO Mocked '.catch()' section
-    .catch((err) => {
-      const user = storage.getItem('USER');
-      if (user) {
-        const parsedUser = JSON.parse(user);
-        return parsedUser;
-      }
-      return Promise.reject(err);
-    })
-    .then(user => dispatch(receiveUser(user)))
-    .catch(() => dispatch(fetchSignOut()));
+
+  // Mocked user data
+  const mockedUser = {
+    authorities: ['ENABLE_SEE_SECRET_PAGE'],
+    email: 'adminMail@gmail.com',
+    firstName: 'Адмiнич',
+    id: '123',
+    lastName: 'Адмiнченко',
+    login: 'admin',
+  };
+
+  // Immediately dispatch the receiveUser action with the mocked user data
+  dispatch(receiveUser(mockedUser));
 };
 
 const exportFunctions = {
